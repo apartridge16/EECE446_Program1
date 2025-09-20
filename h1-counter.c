@@ -1,6 +1,9 @@
 /* This code is an updated version of the sample code from "Computer Networks: A Systems
  * Approach," 5th Edition by Larry L. Peterson and Bruce S. Davis. Some code comes from
- * man pages, mostly getaddrinfo(3). */
+ * man pages, mostly getaddrinfo(3). 
+ * Program 1
+ * Lauren Runion and Aaron Partridge
+ * We used the starter code provided*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
