@@ -89,14 +89,14 @@ int countTags(char *buf, int len)
 	const char *h1tag = "<h1>";
 	const int tag_len = strlen(h1tag);
 
-	// Processes the current buffer for fully contained <h1>tags
+	//Searches current buffer for <h1>tags
 	for (int i = 0; i <= len - tag_len; i++)
 	{
-		// Checks for an exact match of the <h1> tag within thecurrent chunk
+		//Looks in current chunks for full <h1> tags
 		if (strncasecmp(&buf[i], h1tag, tag_len) == 0)
 		{
 			count++;
-			i += tag_len - 1; // Skips ahead by the length of the tag to avoid double counting
+			i += tag_len - 1; //moves onto next tag using length
 		}
 	}
 	return count;
@@ -107,8 +107,8 @@ int main(int argc, char *argv[])
 	int s;
 	const char *host = "www.ecst.csuchico.edu";
 	const char *port = "80";
-	char request[] = "GET /~kkredo/file.html HTTP/1.0\r\n\r\n"; // http request
-	int len = strlen(request);									// gets string length of char request
+	char request[] = "GET /~kkredo/file.html HTTP/1.0\r\n\r\n"; //http request
+	int len = strlen(request);	//gets string length of char request
 	char buf[1000];
 	int chunkSize = 0;
 	int receivedBytes = 0;
@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	// Main while-loop to receive, count, and total the bytes and tags
+	//Loop to receive, count and total, bytes and tags
 	while ((receivedBytes = recvall(s, buf, chunkSize)) > 0)
 	{
 		totalBytes += receivedBytes;
