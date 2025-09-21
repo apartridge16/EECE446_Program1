@@ -25,6 +25,8 @@ int main( ) {
 	int s;
 	const char *host = "www.ecst.csuchico.edu";
 	const char *port = "80";
+	char *request = "GET /~kkredo/file.html HTTP/1.0\r\n\r\n";
+
 
 	/* Lookup IP and connect to server */
 	if ( ( s = lookup_and_connect( host, port ) ) < 0 ) {
