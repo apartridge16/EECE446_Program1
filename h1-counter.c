@@ -22,10 +22,9 @@
 int lookup_and_connect( const char *host, const char *service );
 
 int main( ) {
-	printf("hello");
 	int s;
-	const char *host = "www.server.com";
-	const char *port = "5432";
+	const char *host = "www.ecst.csuchico.edu";
+	const char *port = "80";
 
 	/* Lookup IP and connect to server */
 	if ( ( s = lookup_and_connect( host, port ) ) < 0 ) {
