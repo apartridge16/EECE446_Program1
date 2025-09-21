@@ -22,6 +22,7 @@
 int lookup_and_connect( const char *host, const char *service );
 
 int main( ) {
+	printf("hello");
 	int s;
 	const char *host = "www.server.com";
 	const char *port = "5432";
