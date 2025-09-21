@@ -57,24 +57,24 @@ int sendall(int s, char *buf, int *len)
  *******************************************************************************/
 int recvall(int s, char *buf, int len)
 {
-	int total_received = 0;
-	while (total_received < len)
+	int totalReceived = 0;
+	while (totalReceived < len)
 	{
-		int bytes_received = recv(s, buf + total_received, len - total_received, 0);
-		if (bytes_received < 0)
+		int bytesReceived = recv(s, buf + totalReceived, len - totalReceived, 0);
+		if (bytesReceived < 0)
 		{
 			return -1;
 		}
-		else if (bytes_received == 0)
+		else if (bytesReceived == 0)
 		{
 			break;
 		}
 		else
 		{
-			total_received += bytes_received;
+			totalReceived += bytesReceived;
 		}
 	}
-	return total_received;
+	return totalReceived;
 }
 
 /*******************************************************************************
@@ -87,16 +87,16 @@ int countTags(char *buf, int len)
 {
 	int count = 0;
 	const char *h1tag = "<h1>";
-	const int tag_len = strlen(h1tag);
+	const int tagLength = strlen(h1tag);
 
-	//Searches current buffer for <h1>tags
-	for (int i = 0; i <= len - tag_len; i++)
+	// Searches current buffer for <h1>tags
+	for (int i = 0; i <= len - tagLength; i++)
 	{
-		//Looks in current chunks for full <h1> tags
-		if (strncasecmp(&buf[i], h1tag, tag_len) == 0)
+		// Looks in current chunks for full <h1> tags
+		if (strncasecmp(&buf[i], h1tag, tagLength) == 0)
 		{
 			count++;
-			i += tag_len - 1; //moves onto next tag using length
+			i += tagLength - 1; // moves onto next tag using length
 		}
 	}
 	return count;
@@ -107,8 +107,8 @@ int main(int argc, char *argv[])
 	int s;
 	const char *host = "www.ecst.csuchico.edu";
 	const char *port = "80";
-	char request[] = "GET /~kkredo/file.html HTTP/1.0\r\n\r\n"; //http request
-	int len = strlen(request);	//gets string length of char request
+	char request[] = "GET /~kkredo/file.html HTTP/1.0\r\n\r\n"; // http request
+	int len = strlen(request);									// gets string length of char request
 	char buf[1000];
 	int chunkSize = 0;
 	int receivedBytes = 0;
@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	//Loop to receive, count and total, bytes and tags
+	// Loop to receive, count and total, bytes and tags
 	while ((receivedBytes = recvall(s, buf, chunkSize)) > 0)
 	{
 		totalBytes += receivedBytes;
