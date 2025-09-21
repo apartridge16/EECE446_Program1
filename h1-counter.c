@@ -26,6 +26,7 @@ int main( ) {
 	const char *host = "www.ecst.csuchico.edu";
 	const char *port = "80";
 	char *request = "GET /~kkredo/file.html HTTP/1.0\r\n\r\n";
+	int len = strlen(request); //gets string length of char request
 
 
 	/* Lookup IP and connect to server */
