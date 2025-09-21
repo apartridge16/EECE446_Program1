@@ -40,13 +40,13 @@ int sendall(int s, char *buf, int *len)
     return n==-1?-1:0; // return -1 on failure, 0 on success
 } 
 //modified sendall function from beej's guide
-int recvall(int s, char *buf, int *len)
+int recvall(int s, char *buf, int len)
 {
     int total = 0;        // how many bytes we've received
-    int bytesleft = *len; // how many we still expect
+    int bytesleft = len; // how many we still expect
     int n;
 
-    while (total < *len) {
+    while (total < len) {
         n = recv(s, buf + total, bytesleft, 0);
         if (n <= 0) {
             // error or connection closed
@@ -56,12 +56,12 @@ int recvall(int s, char *buf, int *len)
         bytesleft -= n;
     }
 
-    *len = total; // actual number of bytes received
+    len = total; // actual number of bytes received
 
     return (n <= 0) ? -1 : 0; // -1 if error/closed early, 0 if success
 }
 
-	int countTags(int s, char *buf, int *len){
+	int countTags(char *buf, int len){
 		int count = 0;
   		const char *h1tag = "<h1>";
   		const int tag_len = strlen(h1tag);
@@ -78,19 +78,25 @@ int recvall(int s, char *buf, int *len)
 	}
 
 
-int main(char *argv[]) {
+int main(int argc, char *argv[]) {
 	int s;
 	const char *host = "www.ecst.csuchico.edu";
 	const char *port = "80";
 	char request[] = "GET /~kkredo/file.html HTTP/1.0\r\n\r\n";//http request
 	int len = strlen(request); //gets string length of char request
 	char buf[1000];
-	int chunksize = 0;
+	int chunkSize = 0;
 	int receivedBytes = 0;
 	int totalBytes = 0;
 	int totalTags = 0;
 
-	chunksize = atoi(argv[1]);
+  if(argc == 2){
+    chunkSize = atoi(argv[1]);
+  }
+  else{
+    fprintf(stderr, "usage: %s host\n", argv[0]);
+    exit(1);
+  }
 
 	/* Lookup IP and connect to server */
 	if ( ( s = lookup_and_connect( host, port ) ) < 0 ) {
@@ -104,14 +110,14 @@ int main(char *argv[]) {
   }
 
   	//Main while-loop to receive, count, and total the bytes and tags
-  while((receivedBytes = recvall(s, buf, chunksize)) > 0){
+  while((receivedBytes = recvall(s, buf, chunkSize)) > 0){
     totalBytes += receivedBytes;
     if(receivedBytes == -1){
       perror("Error: recvall");
       close(s);
       exit(1);
     }
-    totalTags += tagCounter(buf, receivedBytes);
+    totalTags += countTags(buf, receivedBytes);
   }
 
   	printf("Number of bytes: %d\n", totalBytes);
