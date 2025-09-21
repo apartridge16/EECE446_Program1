@@ -1,6 +1,6 @@
 /* This code is an updated version of the sample code from "Computer Networks: A Systems
  * Approach," 5th Edition by Larry L. Peterson and Bruce S. Davis. Some code comes from
- * man pages, mostly getaddrinfo(3). 
+ * man pages, mostly getaddrinfo(3).
  * Program 1
  * Lauren Runion and Aaron Partridge
  * We used the starter code provided*/
@@ -19,145 +19,185 @@
  * Returns a connected socket descriptor or -1 on error. Caller is responsible for closing
  * the returned socket.
  */
-int lookup_and_connect( const char *host, const char *service );
+int lookup_and_connect(const char *host, const char *service);
 
-//Used code from Beej's guide
+/*******************************************************************************
+ * Function Name: sendall()
+ * Parameters: int s, char *buf, int *len
+ * Return Value: int
+ * Purpose: taken from Beej's Guide chapter 7.4 - used to deal with partial sends until the full packet has been sent.
+ *******************************************************************************/
 int sendall(int s, char *buf, int *len)
 {
-    int total = 0;        // how many bytes we've sent
-    int bytesleft = *len; // how many we have left to send
-    int n;
+	int total = 0;		  // how many bytes we've sent
+	int bytesleft = *len; // how many we have left to send
+	int n;
 
-    while(total < *len) {
-        n = send(s, buf+total, bytesleft, 0);
-        if (n == -1) { break; }
-        total += n;
-        bytesleft -= n;
-    }
-
-    *len = total; // return number actually sent here
-
-    return n==-1?-1:0; // return -1 on failure, 0 on success
-} 
-//modified sendall function from beej's guide
-int recvall(int s, char *buf, int len)
-{
-   int total_received = 0;
-  while(total_received < len){
-    int bytes_received = recv(s, buf + total_received, len - total_received, 0);
-    if(bytes_received < 0){
-      return -1;
-    }
-    else if(bytes_received == 0){
-      break;
-    }
-    else{
-      total_received += bytes_received;
-    }
-  }
-  return total_received;
-}
-
-	int countTags(char *buf, int len){
-		int count = 0;
-  		const char *h1tag = "<h1>";
-  		const int tag_len = strlen(h1tag);
-
- 		//Processes the current buffer for fully contained <h1> tags
-  		for(int i = 0; i <= len - tag_len; i++){
-   		 //Checks for an exact match of the <h1> tag within the current chunk
-   		 if(strncasecmp(&buf[i], h1tag, tag_len) == 0){
-     		 count++;
-      			i += tag_len - 1;//Skips ahead by the length of the tag to avoid double counting
-   			 }
-  		}
- 		 return count;
+	while (total < *len)
+	{
+		n = send(s, buf + total, bytesleft, 0);
+		if (n == -1)
+		{
+			break;
+		}
+		total += n;
+		bytesleft -= n;
 	}
 
+	*len = total; // return number actually sent here
 
-int main(int argc, char *argv[]) {
+	return n == -1 ? -1 : 0; // return -1 on failure, 0 on success
+}
+
+/*******************************************************************************
+ * Function Name: recvall()
+ * Parameters: int s, char *buf, int len
+ * Return Value: int
+ * Purpose: modified from sendall() in Beej's Guide chapter 7.4 - used to make sure the full packet is received when dealing with partial sends
+ *******************************************************************************/
+int recvall(int s, char *buf, int len)
+{
+	int total_received = 0;
+	while (total_received < len)
+	{
+		int bytes_received = recv(s, buf + total_received, len - total_received, 0);
+		if (bytes_received < 0)
+		{
+			return -1;
+		}
+		else if (bytes_received == 0)
+		{
+			break;
+		}
+		else
+		{
+			total_received += bytes_received;
+		}
+	}
+	return total_received;
+}
+
+/*******************************************************************************
+ * Function Name: countTags()
+ * Parameters: char *buf, int len
+ * Return Value: int
+ * Purpose: to count only exact matches for "<h1>" and not partial matches
+ *******************************************************************************/
+int countTags(char *buf, int len)
+{
+	int count = 0;
+	const char *h1tag = "<h1>";
+	const int tag_len = strlen(h1tag);
+
+	// Processes the current buffer for fully contained <h1>tags
+	for (int i = 0; i <= len - tag_len; i++)
+	{
+		// Checks for an exact match of the <h1> tag within thecurrent chunk
+		if (strncasecmp(&buf[i], h1tag, tag_len) == 0)
+		{
+			count++;
+			i += tag_len - 1; // Skips ahead by the length of the tag to avoid double counting
+		}
+	}
+	return count;
+}
+
+int main(int argc, char *argv[])
+{
 	int s;
 	const char *host = "www.ecst.csuchico.edu";
 	const char *port = "80";
-	char request[] = "GET /~kkredo/file.html HTTP/1.0\r\n\r\n";//http request
-	int len = strlen(request); //gets string length of char request
+	char request[] = "GET /~kkredo/file.html HTTP/1.0\r\n\r\n"; // http request
+	int len = strlen(request);									// gets string length of char request
 	char buf[1000];
 	int chunkSize = 0;
 	int receivedBytes = 0;
 	int totalBytes = 0;
 	int totalTags = 0;
 
-  if(argc == 2){
-    chunkSize = atoi(argv[1]);
-  }
-  else{
-    fprintf(stderr, "usage: %s host\n", argv[0]);
-    exit(1);
-  }
-
-	/* Lookup IP and connect to server */
-	if ( ( s = lookup_and_connect( host, port ) ) < 0 ) {
-		exit( 1 );
+	if (argc == 2)
+	{
+		chunkSize = atoi(argv[1]);
+	}
+	else
+	{
+		fprintf(stderr, "usage: %s host\n", argv[0]);
+		exit(1);
 	}
 
-	if(sendall(s, request, &len) == -1){
-    perror("Request failed");
-    close(s);
-    exit(1);
-  }
+	/* Lookup IP and connect to server */
+	if ((s = lookup_and_connect(host, port)) < 0)
+	{
+		exit(1);
+	}
 
-  	//Main while-loop to receive, count, and total the bytes and tags
-  while((receivedBytes = recvall(s, buf, chunkSize)) > 0){
-    totalBytes += receivedBytes;
-    if(receivedBytes == -1){
-      perror("Error: recvall");
-      close(s);
-      exit(1);
-    }
-    totalTags += countTags(buf, receivedBytes);
-  }
+	if (sendall(s, request, &len) == -1)
+	{
+		perror("Request failed");
+		close(s);
+		exit(1);
+	}
 
-  	printf("Number of bytes: %d\n", totalBytes);
-  	printf("Number of <h1> tags: %d\n", totalTags);
-	close( s );
+	// Main while-loop to receive, count, and total the bytes and tags
+	while ((receivedBytes = recvall(s, buf, chunkSize)) > 0)
+	{
+		totalBytes += receivedBytes;
+		if (receivedBytes == -1)
+		{
+			perror("Error: recvall");
+			close(s);
+			exit(1);
+		}
+		totalTags += countTags(buf, receivedBytes);
+	}
+
+	printf("Number of bytes: %d\n", totalBytes);
+	printf("Number of <h1> tags: %d\n", totalTags);
+	close(s);
 
 	return 0;
 }
 
-int lookup_and_connect( const char *host, const char *service ) {
+int lookup_and_connect(const char *host, const char *service)
+{
 	struct addrinfo hints;
 	struct addrinfo *rp, *result;
 	int s;
 
 	/* Translate host name into peer's IP address */
-	memset( &hints, 0, sizeof( hints ) );
+	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = 0;
 	hints.ai_protocol = 0;
 
-	if ( ( s = getaddrinfo( host, service, &hints, &result ) ) != 0 ) {
-		fprintf( stderr, "stream-talk-client: getaddrinfo: %s\n", gai_strerror( s ) );
+	if ((s = getaddrinfo(host, service, &hints, &result)) != 0)
+	{
+		fprintf(stderr, "stream-talk-client: getaddrinfo: %s\n", gai_strerror(s));
 		return -1;
 	}
 
 	/* Iterate through the address list and try to connect */
-	for ( rp = result; rp != NULL; rp = rp->ai_next ) {
-		if ( ( s = socket( rp->ai_family, rp->ai_socktype, rp->ai_protocol ) ) == -1 ) {
+	for (rp = result; rp != NULL; rp = rp->ai_next)
+	{
+		if ((s = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) == -1)
+		{
 			continue;
 		}
 
-		if ( connect( s, rp->ai_addr, rp->ai_addrlen ) != -1 ) {
+		if (connect(s, rp->ai_addr, rp->ai_addrlen) != -1)
+		{
 			break;
 		}
 
-		close( s );
+		close(s);
 	}
-	if ( rp == NULL ) {
-		perror( "stream-talk-client: connect" );
+	if (rp == NULL)
+	{
+		perror("stream-talk-client: connect");
 		return -1;
 	}
-	freeaddrinfo( result );
+	freeaddrinfo(result);
 
 	return s;
 }
