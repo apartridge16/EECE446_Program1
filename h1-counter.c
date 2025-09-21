@@ -42,23 +42,20 @@ int sendall(int s, char *buf, int *len)
 //modified sendall function from beej's guide
 int recvall(int s, char *buf, int len)
 {
-    int total = 0;        // how many bytes we've received
-    int bytesleft = len; // how many we still expect
-    int n;
-
-    while (total < len) {
-        n = recv(s, buf + total, bytesleft, 0);
-        if (n <= 0) {
-            // error or connection closed
-            break;
-        }
-        total += n;
-        bytesleft -= n;
+   int total_received = 0;
+  while(total_received < len){
+    int bytes_received = recv(s, buf + total_received, len - total_received, 0);
+    if(bytes_received < 0){
+      return -1;
     }
-
-    len = total; // actual number of bytes received
-
-    return (n <= 0) ? -1 : 0; // -1 if error/closed early, 0 if success
+    else if(bytes_received == 0){
+      break;
+    }
+    else{
+      total_received += bytes_received;
+    }
+  }
+  return total_received;
 }
 
 	int countTags(char *buf, int len){
