@@ -21,28 +21,101 @@
  */
 int lookup_and_connect( const char *host, const char *service );
 
-int main( ) {
+//Used code from Beej's guide
+int sendall(int s, char *buf, int *len)
+{
+    int total = 0;        // how many bytes we've sent
+    int bytesleft = *len; // how many we have left to send
+    int n;
+
+    while(total < *len) {
+        n = send(s, buf+total, bytesleft, 0);
+        if (n == -1) { break; }
+        total += n;
+        bytesleft -= n;
+    }
+
+    *len = total; // return number actually sent here
+
+    return n==-1?-1:0; // return -1 on failure, 0 on success
+} 
+//modified sendall function from beej's guide
+int recvall(int s, char *buf, int *len)
+{
+    int total = 0;        // how many bytes we've received
+    int bytesleft = *len; // how many we still expect
+    int n;
+
+    while (total < *len) {
+        n = recv(s, buf + total, bytesleft, 0);
+        if (n <= 0) {
+            // error or connection closed
+            break;
+        }
+        total += n;
+        bytesleft -= n;
+    }
+
+    *len = total; // actual number of bytes received
+
+    return (n <= 0) ? -1 : 0; // -1 if error/closed early, 0 if success
+}
+
+	int countTags(int s, char *buf, int *len){
+		int count = 0;
+  		const char *h1tag = "<h1>";
+  		const int tag_len = strlen(h1tag);
+
+ 		//Processes the current buffer for fully contained <h1> tags
+  		for(int i = 0; i <= len - tag_len; i++){
+   		 //Checks for an exact match of the <h1> tag within the current chunk
+   		 if(strncasecmp(&buf[i], h1tag, tag_len) == 0){
+     		 count++;
+      			i += tag_len - 1;//Skips ahead by the length of the tag to avoid double counting
+   			 }
+  		}
+ 		 return count;
+	}
+
+
+int main(char *argv[]) {
 	int s;
 	const char *host = "www.ecst.csuchico.edu";
 	const char *port = "80";
-	char *request = "GET /~kkredo/file.html HTTP/1.0\r\n\r\n";
+	char request[] = "GET /~kkredo/file.html HTTP/1.0\r\n\r\n";//http request
 	int len = strlen(request); //gets string length of char request
+	char buf[1000];
+	int chunksize = 0;
+	int receivedBytes = 0;
+	int totalBytes = 0;
+	int totalTags = 0;
 
+	chunksize = atoi(argv[1]);
 
 	/* Lookup IP and connect to server */
 	if ( ( s = lookup_and_connect( host, port ) ) < 0 ) {
 		exit( 1 );
 	}
 
-	/* Modify the program so it
-	 *
-	 * 1) connects to www.ecst.csuchico.edu on port 80 (mostly done above)
-	 * 2) sends "GET /~kkredo/file.html HTTP/1.0\r\n\r\n" to the server
-	 * 3) receives all the data sent by the server (HINT: "orderly shutdown" in recv(2))
-	 * 4) prints the total number of bytes received
-	 *
-	 * */
+	if(sendall(s, request, &len) == -1){
+    perror("Request failed");
+    close(s);
+    exit(1);
+  }
 
+  	//Main while-loop to receive, count, and total the bytes and tags
+  while((receivedBytes = recvall(s, buf, chunksize)) > 0){
+    totalBytes += receivedBytes;
+    if(receivedBytes == -1){
+      perror("Error: recvall");
+      close(s);
+      exit(1);
+    }
+    totalTags += tagCounter(buf, receivedBytes);
+  }
+
+  	printf("Number of bytes: %d\n", totalBytes);
+  	printf("Number of <h1> tags: %d\n", totalTags);
 	close( s );
 
 	return 0;
